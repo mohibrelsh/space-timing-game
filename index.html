@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار التوقيت الفضائي</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#080d19;color:white;
+ font-family:Arial,sans-serif;text-align:center;
+ min-height:100vh;padding:20px 12px;
+}
+h1{font-size:25px;color:#70c9ff;margin:18px 0}
+.info{display:flex;justify-content:space-around;margin:25px 0}
+.info div{background:#17243b;padding:12px 20px;border-radius:12px}
+#stage{color:#70c9ff}
+.game{
+ position:relative;width:100%;height:300px;
+ background:linear-gradient(135deg,#101d38,#263b60);
+ border:2px solid #42618c;border-radius:18px;
+ overflow:hidden;margin:25px auto;
+}
+.target{
+ position:absolute;left:50%;top:0;height:100%;
+ border-left:2px dashed #ffdc68;
+ opacity:.9;
+}
+.mover{
+ position:absolute;top:50%;left:0;
+ width:180px;height:180px;
+ transform:translateY(-50%);
+}
+.mover img{
+ position:absolute;width:100%;height:100%;
+ object-fit:cover;border-radius:14px;
+}
+.mover .mirror{
+ transform:scaleX(-1);opacity:.5;
+}
+button{
+ border:0;border-radius:13px;padding:15px 25px;
+ margin:8px;font-size:17px;font-weight:bold;
+ cursor:pointer;
+}
+#hit{background:#1689df;color:white}
+#pause{background:#e8b83e;color:#171717}
+#message{min-height:30px;color:#a8dfff;font-size:17px}
+small{color:#9aaac4}
+</style>
+</head>
+<body>
+
+<h1>🚀 اختبار التوقيت الفضائي</h1>
+
+<div class="info">
+ <div>المرحلة<br><b id="stage">1 / 10</b></div>
+ <div>النقاط<br><b id="score">0</b></div>
+</div>
+
+<div class="game" id="game">
+ <div class="target"></div>
+ <div class="mover" id="mover">
+  <img id="photo" alt="صورة المرحلة">
+  <img id="mirror" class="mirror" alt="">
+ </div>
+</div>
+
+<div id="message">اضغط عندما تصل الصورة إلى خط المنتصف!</div>
+
+<button id="hit">🎯 اختبر توقيتك</button>
+<button id="pause">⏸ إيقاف</button>
+
+<p><small>كل مرحلة لها صورة فوتوغرافية مختلفة</small></p>
+
+<script>
+const photos=[
+"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=500",
+"https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=500",
+"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500",
+"https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=500",
+"https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=500",
+"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500",
+"https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=500",
+"https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=500",
+"https://images.unsplash.com/photo-1500534623283-312aade485b7?w=500",
+"https://images.unsplash.com/photo-1472396961693-142e6e269027?w=500"
+];
+
+let stage=0,score=0,x=0,speed=2.5;
+let paused=false,running=true,lastTime=0;
+let passed=false;
+const game=document.getElementById("game");
+const mover=document.getElementById("mover");
+const photo=document.getElementById("photo");
+const mirror=document.getElementById("mirror");
+const message=document.getElementById("message");
+
+const preloaded=photos.map(url=>{
+ const img=new Image();
+ img.src=url;
+ return img;
+});
+
+function loadStage(){
+ photo.src=photos[stage];
+ mirror.src=photos[stage];
+ x=-190;
+ passed=false;
+ speed=2.5+stage*.35;
+ document.getElementById("stage").textContent=
+ (stage+1)+" / 10";
+}
+
+function animate(time){
+ requestAnimationFrame(animate);
+ if(paused||!running)return;
+ if(!lastTime)lastTime=time;
+ const dt=Math.min((time-lastTime)/16.67,3);
+ lastTime=time;
+
+ x+=speed*dt;
+ const center=x+90;
+ const target=game.clientWidth/2;
+
+ mover.style.left=x+"px";
+
+ if(center>game.clientWidth+100){
+  x=-190;
+  passed=false;
+ }
+}
+
+function hit(){
+ if(paused||!running)return;
+
+ const center=x+90;
+ const target=game.clientWidth/2;
+ const difference=Math.abs(center-target);
+
+ if(difference<45){
+  score+=10;
+  document.getElementById("score").textContent=score;
+  message.textContent="🎯 إصابة ممتازة! +10 نقاط";
+  nextStage();
+ }else{
+  message.textContent="فاتك التوقيت! حاول مع الصورة التالية";
+ }
+}
+
+function nextStage(){
+ stage++;
+ if(stage>=10){
+  running=false;
+  message.textContent="🏆 مبروك! أنهيت المراحل العشر!";
+  document.getElementById("hit").disabled=true;
+  return;
+ }
+ loadStage();
+}
+
+document.getElementById("hit").addEventListener("click",hit);
+
+document.getElementById("pause").addEventListener("click",()=>{
+ paused=!paused;
+ document.getElementById("pause").textContent=
+ paused?"▶ استكمال":"⏸ إيقاف";
+ if(!paused)lastTime=0;
+});
+
+loadStage();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
